@@ -1,0 +1,73 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2011 Nathan Van Fleet
+
+START=99
+
+COFFEED_BIN="/usr/sbin/coffeed"
+
+append_arg() {
+	local cfg="$1"
+	local var="$2"
+	local opt="$3"
+	local def="$4"
+	local val
+
+	config_get val "$cfg" "$var"
+	[ -n "$val" -o -n "$def" ] && append COFFEED_ARGS "$opt ${val:-$def}"
+}
+
+start_instance()
+{
+	COFFEED_ARGS=""
+	
+	local cfg="$1"
+
+	append_arg "$cfg" amb_add "-t"
+	append_arg "$cfg" adc_add "-T"
+	append_arg "$cfg" adc_chan "-c"
+	append_arg "$cfg" i2c_bus "-i"
+	append_arg "$cfg" pwm_bus "-w"
+	append_arg "$cfg" tmp_log "-l"
+	append_arg "$cfg" update "-u"
+	append_arg "$cfg" port "-p"
+	append_arg "$cfg" logging "-L"
+	append_arg "$cfg" p_const "-P"
+	append_arg "$cfg" i_const "-I"
+	append_arg "$cfg" d_const "-D"
+	append_arg "$cfg" use_celcius "-C"
+	append_arg "$cfg" brew_setpoint "-B"
+	append_arg "$cfg" steam_setpoint "-S"
+	append_arg "$cfg" boiler_offset "-O"
+	
+	start-stop-daemon -S -x $COFFEED_BIN -p /var/run/coffeed.pid -m -b -- $COFFEED_ARGS
+}
+
+stop_instance()
+{
+	local cfg="$1"
+
+	[ -f /var/run/coffeed.pid ] && {
+        start-stop-daemon -K -q -n ${COFFEED_BIN##*/} -p /var/run/coffeed.pid -s TERM
+        
+		rm -f /var/run/coffeed.pid
+	}
+}
+
+turn_off_heater()
+{
+	echo "0" > /sys/class/pwm/gpio_pwm.0:0/run
+}
+
+start() {	
+	config_load coffeed
+	config_foreach start_instance coffeed
+}
+
+stop() {
+	stop_instance coffeed
+}
+
+restart() {
+	stop_instance
+	start
+}

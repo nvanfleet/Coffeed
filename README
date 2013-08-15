@@ -1,0 +1,22 @@
+# Copyright (C) 2013 Nathan Van Fleet
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+
+Coffeed is a OpenWRT daemon server to control your espresso machine's temperature via a PID algorithm.
+
+This is a OpenWRT package that will build an app binary that will be installable on OpenWRT routers.
+
+What is required is a router with OpenWRT firmware with the proper GPIO, i2C and PWM installed kernel options.
+
+It runs as a daemon and can be talked to over the network via the coffeec clients (iPhone, cli, Mac etc...)
+
+You need to build a circuit board to mount the different i2c chips and the transistor to actually interface a
+thermocouple and a SSR. Plans of which I hopefully made available. 
+
+GPO addresses are available in the configuration file if you're not using the default numbers.
+
+TODO:
+- Auto tuning
+- Better PID algorithm

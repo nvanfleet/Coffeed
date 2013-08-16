@@ -1,4 +1,50 @@
 #=======================
+Overview
+#=======================
+1. Customize and install OpenWRT router operating system on your router
+2. Build coffeed/coffeec packages and install on the router
+3. Build and install hardware (not included in these instructions)
+
+#=======================
+BUILD OPENWRT for your router
+#=======================
+It has to be a specific revision of OpenWRT because we need to apply a kernel patch
+
+1. 
+svn checkout https://svn.openwrt.org/openwrt/trunk@30950 trunk
+This will create a folder called "trunk". This is the OpenWRT build system that will allow you to create a firmware to install on your router as well as build the different packages (coffeed and coffeec).
+
+2.
+Then you have to move the attached kernel patch in CoffeedHardware to this directory:
+
+#Place the patch
+980-drivers_pwm.patch
+openwrt/target/linux/generic/patches-2.6.37/980-drivers_pwm.patch
+
+Once installed you will be able to enable the pwm kernel driver
+
+3. 
+You then need to go into that folder and do a "make kernel_menuconfig" and add specific kernel plugins for
+kmod-i2c-gpio
+kmod-i2c-gpio-custom 
+kmod-pwm-gpio-custom
+kmod-pwm-gpio
+
+4. 
+Run "make menuconfig" to make sure the packages above are then included as well as:
+libstdcpp
+
+5. You can then customize whatever else you want and then make the firmware by saying "make". You may want to check out the OpenWRT docs for other things you might want to hook up.
+
+#=======================
+Install OpenWRT on your device
+#=======================
+
+1. 
+You should check out the documentation about OpenWRT for this. I did it over serial connection but that was a limitation of the hardware I was using. I put it in here in the case you're using LaFonera or a Meraki Mini. But there's no warranty on these instructions.
+
+
+2. 
 REDBOOT configure
 
 fconfig -l
@@ -14,7 +60,7 @@ check_mac
 fis load -d linux
 exec
 
-#=======================
+3.
 REDBOOT install Openwrt
 
 //KERNEL
@@ -25,3 +71,56 @@ fis create -r 0x80041000 -e 0x80041000 linux
 //SQUASHFS
 load -r -b %{FREEMEMLO} -m http -h 192.168.1.64 /openwrt-atheros-root.squashfs
 fis create rootfs
+
+#=======================
+Build coffeed/coffeec
+#=======================
+1. Put the coffeed/coffeec package folder in the trunk/package folder
+
+2. Issue the build command while inside the trunk folder.
+	
+	make package/coffeed/compile V=99
+
+#=======================
+Install coffeed/coffeec
+#=======================
+You can replace coffeed with coffeec in this
+	
+1. Send the package to your router via scp
+
+	scp bin/atheros/packages/coffeed_2.1-1_atheros.ipk root@192.168.1.1:/tmp
+	
+2. Login to router and install package
+
+	ssh root@192.168.1.1
+	opkg install /tmp/coffeed_2.1-1_atheros.ipk
+	
+#=======================
+Configure COFFEED
+#=======================
+edit the file /etc/config/coffeed and change any settings
+
+Start stop with 
+	/etc/init.d/coffeed start
+	/etc/init.d/coffeed stop
+
+You can also trying to run coffeed --help and you will get some info too
+	
+#=======================
+Using COFFEEC
+#=======================
+
+Make the PID active
+/usr/bin/coffeec -c active=1
+
+Make the PID inactive
+/usr/bin/coffeec -c active=0
+
+Crontab script to turn it on or off
+40 7 * * 0,6 /usr/bin/coffeec -c active=1
+00 14 * * 0,6 /usr/bin/coffeec -c active=0
+
+Connect to a remote coffeed server
+coffeec -a IPADDRESS -p PORT -c COMMAND
+
+You can also run coffeec --help and you will get some info too

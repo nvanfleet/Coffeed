@@ -75,7 +75,12 @@ fis create rootfs
 #=======================
 Build coffeed/coffeec
 #=======================
-1. Put the coffeed/coffeec package folder in the trunk/package folder
+1. If you have coffeec and coffeed in the same directory as "trunk" you need to make links
+
+	ln -s <coffeed folder> <the trunk dir>/package
+
+So something like
+	ln -s /projects/coffeed_folder/coffeed /projects/coffeed_folder/trunk/package/
 
 2. Issue the build command while inside the trunk folder.
 	
